@@ -13,6 +13,13 @@ describe("renderWidgetLines", () => {
 		expect(renderWidgetLines("   \n  ")).toEqual([EMPTY_HINT, SHORTCUT_HINT]);
 	});
 
+	test("emptyHint overrides the default empty hint", () => {
+		expect(renderWidgetLines("", { emptyHint: "(custom)" })).toEqual([
+			"(custom)",
+			SHORTCUT_HINT,
+		]);
+	});
+
 	test("shows the note body first, then the shortcut", () => {
 		expect(renderWidgetLines("one\ntwo")).toEqual([
 			"one",

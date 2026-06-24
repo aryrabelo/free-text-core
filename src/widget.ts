@@ -75,6 +75,8 @@ export interface WidgetOptions {
 	style?: WidgetStyle;
 	/** Max number of done (strikethrough) task blocks shown; older ones are dropped. Default 2. */
 	maxDone?: number;
+	/** Body shown when the note is empty; defaults to {@link EMPTY_HINT}. */
+	emptyHint?: string;
 }
 
 /** Glyph for a task state. */
@@ -181,6 +183,7 @@ export function renderWidgetLines(
 		bodyBudget,
 		options.maxDone ?? 2,
 		style,
+		options.emptyHint,
 	);
 	return [...head, ...body, footer].slice(0, maxLines);
 }
@@ -191,9 +194,11 @@ function renderWidgetBody(
 	bodyBudget: number,
 	maxDone: number,
 	style: WidgetStyle,
+	emptyHint?: string,
 ): string[] {
 	if (bodyBudget === 0) return [];
-	if (trimmed.length === 0) return [style.indent + style.hint(EMPTY_HINT)];
+	if (trimmed.length === 0)
+		return [style.indent + style.hint(emptyHint ?? EMPTY_HINT)];
 	const capped = collapseDoneBlocks(trimmed.split("\n"), Math.max(0, maxDone));
 	const tail = capped.slice(Math.max(capped.length - bodyBudget, 0));
 	return renderBody(tail, style);
