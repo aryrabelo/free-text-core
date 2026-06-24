@@ -5,7 +5,7 @@
 [![CI](https://github.com/aryrabelo/free-text-core/actions/workflows/ci.yml/badge.svg)](https://github.com/aryrabelo/free-text-core/actions/workflows/ci.yml)
 [![bun](https://img.shields.io/badge/runtime-bun-%23f9f1e1)](https://bun.sh)
 
-Runtime-agnostic pure logic for AI agent session notes — path scheme, persistence, markdown prompt-queue parsing, widget rendering, and a stats line. Shared between [`@aryrabelo/omp-free-text`](https://github.com/aryrabelo/omp-free-text) (Oh My Pi) and [`@aryrabelo/claude-free-text`](https://github.com/aryrabelo/claude-free-text) (Claude Code) so both plugins stay in sync without duplicating behavior.
+Pure logic for AI agent session notes — designed for Bun, bundler-compatible with Node.js. Path scheme, persistence, markdown prompt-queue parsing, widget rendering, and a stats line. Shared between [`@aryrabelo/omp-free-text`](https://github.com/aryrabelo/omp-free-text) (Oh My Pi) and [`@aryrabelo/claude-free-text`](https://github.com/aryrabelo/claude-free-text) (Claude Code) so both plugins stay in sync without duplicating behavior.
 
 ## Requirements
 
@@ -83,7 +83,7 @@ import {
   createDebouncedSaver,
 } from "@aryrabelo/free-text-core";
 
-const loc = resolveLocation({ repo: "my-repo", branch: "main", sessionId: "abc123" });
+const loc = resolveLocation({ cwd: "/path/to/my-repo", repoToplevel: "/path/to/my-repo", branch: "main", sessionId: "abc123" });
 const path = notePathFor(loc);              // ~/.free-text/my-repo/main/abc123.md
 
 const content = await loadNote(path);       // "" when file doesn't exist yet
@@ -105,7 +105,7 @@ const line = renderStatsLine({
   linesRemoved: 30,
   durationMs: 185_000,
 });
-// "▓▓▓▓▓▓░░░░ 59% | claude-sonnet-4-5 | +120/-30 | 3m 05s"
+// "▓▓▓▓▓▓░░░░ 69% | claude-sonnet-4-5 | +120/-30 | 3m 05s"
 ```
 
 ### Widget rendering
@@ -133,21 +133,21 @@ Notes live under `~/.free-text/<repo>/<branch>/<sessionId>.md`. The package read
 
 ## API
 
-Full TSDoc on every export. Key symbols:
+Full TSDoc on every export. Key functions and types:
 
-**paths** — `resolveLocation`, `notePathFor`, `historyPathFor`, `sessionsDirFor`, `configPathFor`, `legacyNotePathFor`, `currentPointerPathFor`
+**paths** — `resolveLocation`, `notePathFor`, `historyPathFor`, `sessionsDirFor`, `configPathFor`, `legacyNotePathFor`, `currentPointerPathFor` · Types: `RawLocation`, `ResolvedLocation`
 
-**store** — `loadNote`, `loadConfigText`, `saveNote`, `listNotes`, `appendHistory`, `createDebouncedSaver`, `writeCurrentPointer`, `readCurrentPointer`, `loadNoteWithFallback`
+**store** — `loadNote`, `loadConfigText`, `saveNote`, `listNotes`, `appendHistory`, `createDebouncedSaver`, `writeCurrentPointer`, `readCurrentPointer`, `loadNoteWithFallback` · Types: `DebouncedSaver`, `NoteSummary`
 
-**queue** — `parseTaskLine`, `findHead`, `markInflight`, `completeInflight`, `normalizeQueue`, `appendTask`, `appendQueue`, `removeBarrier`
+**queue** — `parseTaskLine`, `findHead`, `markInflight`, `completeInflight`, `normalizeQueue`, `appendTask`, `appendQueue`, `removeBarrier` · Types: `QueueStep`, `QueueHead`, `TaskState`
 
-**stats** — `computeContext`, `contextLevel`, `formatDuration`, `buildContextBar`, `renderStatsLine`
+**stats** — `computeContext`, `contextLevel`, `formatDuration`, `buildContextBar`, `renderStatsLine` · Types: `StatsSnapshot`, `StatsStyle`, `ContextLevel`
 
-**widget** — `renderWidgetLines`, `PLAIN_STYLE`, `SHORTCUT_HINT`, `EMPTY_HINT`
+**widget** — `renderWidgetLines`, `PLAIN_STYLE`, `SHORTCUT_HINT`, `EMPTY_HINT` · Types: `WidgetStyle`, `WidgetOptions`
 
-**config** — `parseShortcutConfig`, `humanizeKey`, `queueHint`
+**config** — `parseShortcutConfig`, `humanizeKey`, `queueHint` · Types: `ShortcutConfig`, `ParsedShortcuts`, `DEFAULT_SHORTCUTS`
 
-**editor** — `resolveCloseAction`
+**editor** — `resolveCloseAction` · Types: `CloseAction`
 
 ## Ecosystem
 

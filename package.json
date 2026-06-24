@@ -1,7 +1,7 @@
 {
 	"name": "@aryrabelo/free-text-core",
 	"version": "0.1.0",
-	"description": "Runtime-agnostic core for free-text session notes: path scheme, persistence, markdown prompt-queue, line rendering, and a generic stats line. Shared by the Oh My Pi and Claude Code free-text plugins.",
+	"description": "Pure logic for AI agent session notes — designed for Bun, bundler-compatible with Node.js. Path scheme, persistence, markdown prompt-queue, line rendering, and a generic stats line.",
 	"type": "module",
 	"license": "MIT",
 	"author": "Ary Rabelo",
