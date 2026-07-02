@@ -1,11 +1,11 @@
-# @aryrabelo/free-text-core
+# @aryrabelo/planqueue-core
 
-[![npm](https://img.shields.io/npm/v/@aryrabelo/free-text-core)](https://www.npmjs.com/package/@aryrabelo/free-text-core)
-[![license](https://img.shields.io/npm/l/@aryrabelo/free-text-core)](./LICENSE)
-[![CI](https://github.com/aryrabelo/free-text-core/actions/workflows/ci.yml/badge.svg)](https://github.com/aryrabelo/free-text-core/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@aryrabelo/planqueue-core)](https://www.npmjs.com/package/@aryrabelo/planqueue-core)
+[![license](https://img.shields.io/npm/l/@aryrabelo/planqueue-core)](./LICENSE)
+[![CI](https://github.com/aryrabelo/planqueue-core/actions/workflows/ci.yml/badge.svg)](https://github.com/aryrabelo/planqueue-core/actions/workflows/ci.yml)
 [![bun](https://img.shields.io/badge/runtime-bun-%23f9f1e1)](https://bun.sh)
 
-Pure logic for AI agent session notes — designed for Bun, bundler-compatible with Node.js. Path scheme, persistence, markdown prompt-queue parsing, widget rendering, and a stats line. Shared between [`@aryrabelo/omp-free-text`](https://github.com/aryrabelo/omp-free-text) (Oh My Pi) and [`@aryrabelo/claude-free-text`](https://github.com/aryrabelo/claude-free-text) (Claude Code) so both plugins stay in sync without duplicating behavior.
+Pure logic for PlanQueue — AI agent session notes with a markdown prompt queue. Designed for Bun, bundler-compatible with Node.js. Path scheme, persistence, markdown prompt-queue parsing, widget rendering, and a stats line. Used by the PlanQueue plugin for Oh My Pi ([`@aryrabelo/planqueue`](https://github.com/aryrabelo/planqueue)); runtime-agnostic so another harness build can reuse the same behavior without duplicating it.
 
 ## Requirements
 
@@ -14,7 +14,7 @@ Pure logic for AI agent session notes — designed for Bun, bundler-compatible w
 ## Install
 
 ```sh
-bun add @aryrabelo/free-text-core
+bun add @aryrabelo/planqueue-core
 ```
 
 ## Modules
@@ -32,7 +32,7 @@ bun add @aryrabelo/free-text-core
 All modules are re-exported from the package root:
 
 ```ts
-import { findHead, markInflight, notePathFor, renderStatsLine } from "@aryrabelo/free-text-core";
+import { findHead, markInflight, notePathFor, renderStatsLine } from "@aryrabelo/planqueue-core";
 ```
 
 ## Usage
@@ -47,7 +47,7 @@ import {
   completeInflight,
   appendQueue,
   type QueueStep,
-} from "@aryrabelo/free-text-core";
+} from "@aryrabelo/planqueue-core";
 
 // Start with a plain note — loose bullets are normalized automatically
 let note = "- Refactor auth module\n- Write tests";
@@ -81,10 +81,10 @@ import {
   loadNote,
   saveNote,
   createDebouncedSaver,
-} from "@aryrabelo/free-text-core";
+} from "@aryrabelo/planqueue-core";
 
 const loc = resolveLocation({ cwd: "/path/to/my-repo", repoToplevel: "/path/to/my-repo", branch: "main", sessionId: "abc123" });
-const path = notePathFor(loc);              // ~/.free-text/my-repo/main/abc123.md
+const path = notePathFor(loc);              // ~/.planqueue/my-repo/main/abc123.md
 
 const content = await loadNote(path);       // "" when file doesn't exist yet
 
@@ -93,10 +93,23 @@ saver.schedule(content + "\n- [ ] New task");  // coalesces rapid updates
 await saver.flush();
 ```
 
+### Reading legacy notes
+
+New notes always write under `~/.planqueue/`. To keep notes from before the rename visible, read through the legacy roots in order (`~/.free-text/` first, then `~/.omp-free-text/`):
+
+```ts
+import { legacyNotePathsFor, loadNoteWithFallback, notePathFor } from "@aryrabelo/planqueue-core";
+
+const content = await loadNoteWithFallback(
+  notePathFor(loc),           // new root: ~/.planqueue/...
+  legacyNotePathsFor(loc),    // read-only fallback chain: ~/.free-text, then ~/.omp-free-text
+);
+```
+
 ### Stats line
 
 ```ts
-import { renderStatsLine } from "@aryrabelo/free-text-core";
+import { renderStatsLine } from "@aryrabelo/planqueue-core";
 
 const line = renderStatsLine({
   modelName: "claude-sonnet-4-5",
@@ -111,7 +124,7 @@ const line = renderStatsLine({
 ### Widget rendering
 
 ```ts
-import { renderWidgetLines, PLAIN_STYLE } from "@aryrabelo/free-text-core";
+import { renderWidgetLines, PLAIN_STYLE } from "@aryrabelo/planqueue-core";
 
 const note = "- [x] Done task\n- [>] In-flight task\n- [ ] Pending task";
 const lines = renderWidgetLines(note, { maxLines: 6, style: PLAIN_STYLE });
@@ -120,10 +133,10 @@ const lines = renderWidgetLines(note, { maxLines: 6, style: PLAIN_STYLE });
 
 ## Path scheme
 
-Notes live under `~/.free-text/<repo>/<branch>/<sessionId>.md`. The package reads the legacy `~/.omp-free-text/` path for back-compat when the new path doesn't exist yet.
+Notes live under `~/.planqueue/<repo>/<branch>/<sessionId>.md`. For back-compat, reads fall back through the legacy roots `~/.free-text/` then `~/.omp-free-text/` when the new path does not exist yet; writes always go to the new root.
 
 ```
-~/.free-text/
+~/.planqueue/
   my-repo/
     main/
       current.md          ← pointer to the active session id
@@ -135,7 +148,7 @@ Notes live under `~/.free-text/<repo>/<branch>/<sessionId>.md`. The package read
 
 Full TSDoc on every export. Key functions and types:
 
-**paths** — `resolveLocation`, `notePathFor`, `historyPathFor`, `sessionsDirFor`, `configPathFor`, `legacyNotePathFor`, `currentPointerPathFor` · Types: `RawLocation`, `ResolvedLocation`
+**paths** — `ROOT_DIR_NAME`, `LEGACY_ROOT_DIR_NAMES`, `resolveLocation`, `notePathFor`, `historyPathFor`, `sessionsDirFor`, `configPathFor`, `legacyNotePathsFor`, `legacySessionsDirsFor`, `legacyConfigPathsFor`, `currentPointerPathFor` · Types: `RawLocation`, `ResolvedLocation`
 
 **store** — `loadNote`, `loadConfigText`, `saveNote`, `listNotes`, `appendHistory`, `createDebouncedSaver`, `writeCurrentPointer`, `readCurrentPointer`, `loadNoteWithFallback` · Types: `DebouncedSaver`, `NoteSummary`
 
@@ -153,14 +166,13 @@ Full TSDoc on every export. Key functions and types:
 
 | Package | Description |
 |---|---|
-| [`@aryrabelo/omp-free-text`](https://github.com/aryrabelo/omp-free-text) | Oh My Pi plugin — session notes + prompt queue in the OMP HUD |
-| [`@aryrabelo/claude-free-text`](https://github.com/aryrabelo/claude-free-text) | Claude Code plugin — same feature set for Claude Code sessions |
+| [`@aryrabelo/planqueue`](https://github.com/aryrabelo/planqueue) | Oh My Pi plugin — session notes + prompt queue in the OMP HUD |
 
 ## Contributing
 
 ```sh
-git clone https://github.com/aryrabelo/free-text-core.git
-cd free-text-core
+git clone https://github.com/aryrabelo/planqueue-core.git
+cd planqueue-core
 bun install
 
 bun test          # run tests
